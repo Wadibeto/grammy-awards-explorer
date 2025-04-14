@@ -87,7 +87,7 @@ st.markdown("""
 
 # Récupérer la clé API Mistral depuis les variables d'environnement
 # Si elle n'est pas définie, utiliser une valeur par défaut (à remplacer par votre clé)
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "your_mistral_api_key_here")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "WfLdVtMjtWdMW0AYMzz4XrFsoVvm6t56")
 
 # Fonction pour charger les données
 @st.cache_data
