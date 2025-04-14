@@ -8,6 +8,11 @@ from nltk.corpus import stopwords
 from datetime import datetime
 import requests
 import json
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Configuration de la page
 st.set_page_config(
@@ -79,6 +84,10 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
+# Récupérer la clé API Mistral depuis les variables d'environnement
+# Si elle n'est pas définie, utiliser une valeur par défaut (à remplacer par votre clé)
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "your_mistral_api_key_here")
 
 # Fonction pour charger les données
 @st.cache_data
@@ -166,7 +175,7 @@ def extract_common_words(text_series, n=10):
     return Counter(words).most_common(n)
 
 # Fonction pour analyser les données avec l'API Mistral
-def analyze_with_mistral(df, analysis_type, api_key):
+def analyze_with_mistral(df, analysis_type):
     """
     Fonction qui utilise l'API Mistral pour analyser les données Grammy
     """
@@ -261,7 +270,7 @@ def analyze_with_mistral(df, analysis_type, api_key):
         headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "Authorization": f"Bearer {api_key}"
+            "Authorization": f"Bearer {MISTRAL_API_KEY}"
         }
         
         data = {
@@ -366,7 +375,7 @@ def main():
         ]
     
     # Afficher les métriques clés
-    st.markdown('<h2 class="sub-header">Métriques clés</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 class="sub-header">Stats principales</h2>', unsafe_allow_html=True)
     
     col1, col2, col3, col4 = st.columns(4)
     
@@ -427,7 +436,7 @@ def main():
         
         # Insights
         st.markdown('<div class="insight-text">', unsafe_allow_html=True)
-        st.markdown("### Insights clés")
+        st.markdown("### Interprétation des données")
         
         # Calculer quelques insights
         most_awarded_year = filtered_df[filtered_df['winner'] == True].groupby('year').size().sort_values(ascending=False).index[0]
@@ -540,22 +549,16 @@ def main():
             format_func=lambda x: analysis_options[x]
         )
         
-        # Clé API Mistral (pré-remplie avec la clé fournie)
-        api_key = st.text_input("Clé API Mistral", value="WfLdVtMjtWdMW0AYMzz4XrFsoVvm6t56", type="password")
-        
         # Bouton pour lancer l'analyse
         if st.button("Analyser avec Mistral AI"):
-            if api_key:
-                with st.spinner("Mistral AI analyse les données..."):
-                    # Appeler la fonction d'analyse avec l'API Mistral
-                    ai_response = analyze_with_mistral(filtered_df, selected_analysis, api_key)
-                    
-                    # Afficher les résultats
-                    st.markdown('<div class="insight-text">', unsafe_allow_html=True)
-                    st.markdown(ai_response)
-                    st.markdown('</div>', unsafe_allow_html=True)
-            else:
-                st.error("Veuillez entrer une clé API Mistral valide pour continuer.")
+            with st.spinner("Mistral AI analyse les données..."):
+                # Appeler la fonction d'analyse avec l'API Mistral
+                ai_response = analyze_with_mistral(filtered_df, selected_analysis)
+                
+                # Afficher les résultats
+                st.markdown('<div class="insight-text">', unsafe_allow_html=True)
+                st.markdown(ai_response)
+                st.markdown('</div>', unsafe_allow_html=True)
     
     # Onglet Données brutes
     with tabs[4]:
@@ -572,11 +575,6 @@ def main():
             file_name=f"grammy_awards_data_{datetime.now().strftime('%Y%m%d')}.csv",
             mime="text/csv"
         )
-    
-    # Pied de page
-    st.markdown('<div class="footer">', unsafe_allow_html=True)
-    st.markdown("Développé pour le projet d'analyse de données | Grammy Awards Explorer | 2024")
-    st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
